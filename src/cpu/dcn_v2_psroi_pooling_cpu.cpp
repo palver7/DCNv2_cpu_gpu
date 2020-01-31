@@ -10,7 +10,6 @@
 #include <cstdio>
 #include <algorithm>
 #include <cstring>
-#include <iostream>
 
 #include <ATen/ATen.h>
 //#include <ATen/cuda/CUDAContext.h>
@@ -57,7 +56,7 @@ T bilinear_interp(
 }
 
 template <typename T>
-void DeformablePSROIPoolForwardKernel(
+ void DeformablePSROIPoolForwardKernel(
     const int count,
     const T *bottom_data,
     const T spatial_scale,
@@ -76,7 +75,7 @@ void DeformablePSROIPoolForwardKernel(
     T *top_data,
     T *top_count)
 {
-  for(int index = 0; index < count;index++)
+  for(int index = 0; index < count; index++)
   {
     // The output is in order (n, ctop, ph, pw)
     int pw = index % pooled_width;
@@ -91,10 +90,11 @@ void DeformablePSROIPoolForwardKernel(
     T roi_start_h = static_cast<T>(round(offset_bottom_rois[2])) * spatial_scale - 0.5;
     T roi_end_w = static_cast<T>(round(offset_bottom_rois[3]) + 1.) * spatial_scale - 0.5;
     T roi_end_h = static_cast<T>(round(offset_bottom_rois[4]) + 1.) * spatial_scale - 0.5;
-    T epsilon = 0.1;
+
     // Force too small ROIs to be 1x1
-    T roi_width = max(roi_end_w - roi_start_w, epsilon); //avoid 0
-    T roi_height = max(roi_end_h - roi_start_h, epsilon);
+    T eps = 0.1;
+    T roi_width = max(roi_end_w - roi_start_w, eps); //avoid 0
+    T roi_height = max(roi_end_h - roi_start_h, eps);
 
     // Compute w and h at bottom
     T bin_size_h = roi_height / static_cast<T>(pooled_height);
@@ -133,11 +133,9 @@ void DeformablePSROIPoolForwardKernel(
         {
           continue;
         }
-        T epsilon0 = 0.;
-        T epswidth = width - 1.;
-        T epsheight = height - 1.;
-        w = min(max(w, epsilon0), epswidth);
-        h = min(max(h, epsilon0), epsheight);
+        T eps1 = 0., eps2 = 1.;
+        w = min(max(w, eps1), width - eps2);
+        h = min(max(h, eps1), height - eps2);
         int c = (ctop * group_size + gh) * group_size + gw;
         T val = bilinear_interp(offset_bottom_data + c * height * width, w, h, width, height);
         sum += val;
@@ -187,10 +185,11 @@ void DeformablePSROIPoolBackwardAccKernel(
     T roi_start_h = static_cast<T>(round(offset_bottom_rois[2])) * spatial_scale - 0.5;
     T roi_end_w = static_cast<T>(round(offset_bottom_rois[3]) + 1.) * spatial_scale - 0.5;
     T roi_end_h = static_cast<T>(round(offset_bottom_rois[4]) + 1.) * spatial_scale - 0.5;
-    T epsilon = 0.1;
+    
     // Force too small ROIs to be 1x1
-    T roi_width = max(roi_end_w - roi_start_w, epsilon); //avoid 0
-    T roi_height = max(roi_end_h - roi_start_h, epsilon);
+    T eps3 = 0.1;
+    T roi_width = max(roi_end_w - roi_start_w, eps3); //avoid 0
+    T roi_height = max(roi_end_h - roi_start_h, eps3);
 
     // Compute w and h at bottom
     T bin_size_h = roi_height / static_cast<T>(pooled_height);
@@ -233,11 +232,9 @@ void DeformablePSROIPoolBackwardAccKernel(
         {
           continue;
         }
-        T epsilon0 = 0.;
-        T epswidth = width - 1.;
-        T epsheight = height - 1.;
-        w = min(max(w, epsilon0), epswidth );
-        h = min(max(h, epsilon0), epsheight );
+        T eps4 = 0., eps5 = 1.;
+        w = min(max(w, eps4), width - eps5);
+        h = min(max(h, eps4), height - eps5);
         int c = (ctop * group_size + gh) * group_size + gw;
         // backward on feature
         int x0 = floor(w);
@@ -254,15 +251,16 @@ void DeformablePSROIPoolBackwardAccKernel(
         atomicAdd(offset_bottom_data_diff + bottom_index_base + y1 * width + x0, q01 * diff_val);
         atomicAdd(offset_bottom_data_diff + bottom_index_base + y0 * width + x1, q10 * diff_val);
         atomicAdd(offset_bottom_data_diff + bottom_index_base + y1 * width + x1, q11 * diff_val);*/
-        *offset_bottom_data_diff += q00 * diff_val;
-        offset_bottom_data_diff += bottom_index_base + y0 * width + x0;
-        *offset_bottom_data_diff += q01 * diff_val;
-        offset_bottom_data_diff += bottom_index_base + y1 * width + x0;
-        *offset_bottom_data_diff +=  q10 * diff_val;
-        offset_bottom_data_diff += bottom_index_base + y0 * width + x1;
-        *offset_bottom_data_diff += q11 * diff_val;
-        offset_bottom_data_diff += bottom_index_base + y1 * width + x1;
-         
+
+        T *addr = offset_bottom_data_diff + bottom_index_base + y0 * width + x0;
+        *addr += q00 * diff_val;
+        addr = offset_bottom_data_diff + bottom_index_base + y1 * width + x0;
+        *addr += q01 * diff_val;
+        addr = offset_bottom_data_diff + bottom_index_base + y0 * width + x1;
+        *addr += q10 * diff_val;
+        addr = offset_bottom_data_diff + bottom_index_base + y1 * width + x1;
+        *addr += q11 * diff_val;
+
 
         if (no_trans)
         {
@@ -279,10 +277,10 @@ void DeformablePSROIPoolBackwardAccKernel(
 
         /*atomicAdd(bottom_trans_diff + (((n * num_classes + class_id) * 2) * part_size + part_h) * part_size + part_w, diff_x);
         atomicAdd(bottom_trans_diff + (((n * num_classes + class_id) * 2 + 1) * part_size + part_h) * part_size + part_w, diff_y);*/
-        bottom_trans_diff += (((n * num_classes + class_id) * 2) * part_size + part_h) * part_size + part_w;
-        *bottom_trans_diff += diff_x;
-        bottom_trans_diff += (((n * num_classes + class_id) * 2 + 1) * part_size + part_h) * part_size + part_w;
-        *bottom_trans_diff +=  diff_y;
+        addr = bottom_trans_diff +  (((n * num_classes + class_id) * 2) * part_size + part_h) * part_size + part_w;
+        *addr += diff_x;
+        addr = bottom_trans_diff + (((n * num_classes + class_id) * 2 + 1) * part_size + part_h) * part_size + part_w;
+        *addr += diff_y;
       }
     }
   }
@@ -305,7 +303,7 @@ dcn_v2_psroi_pooling_cpu_forward(const at::Tensor &input,
   AT_ASSERTM(bbox.type().is_cuda(), "rois must be a CUDA tensor");
   AT_ASSERTM(trans.type().is_cuda(), "trans must be a CUDA tensor");*/
 
-  //const int batch = input.size(0);
+  const int batch = input.size(0);
   const int channels = input.size(1);
   const int height = input.size(2);
   const int width = input.size(3);
@@ -405,8 +403,8 @@ dcn_v2_psroi_pooling_cpu_backward(const at::Tensor &out_grad,
   }
 
   /*dim3 grid(std::min(THCCeilDiv(out_size, 512L), 4096L));
-  dim3 block(512);*/
-  //cudaStream_t stream = at::cuda::getCurrentCUDAStream();
+  dim3 block(512);
+  cudaStream_t stream = at::cuda::getCurrentCUDAStream();*/
 
   AT_DISPATCH_FLOATING_TYPES(out_grad.type(), "dcn_v2_psroi_pooling_cpu_backward", [&] {
     DeformablePSROIPoolBackwardAccKernel<scalar_t>(

@@ -5,8 +5,6 @@
 //#include <ATen/cuda/CUDAContext.h>
 
 #include <TH/TH.h>
-#include <iostream>
-using namespace std;
 //#include <THC/THCAtomics.cuh>
 //#include <THC/THCDeviceUtils.cuh>
 
@@ -80,7 +78,6 @@ dcn_v2_cpu_forward(const at::Tensor &input,
         long m_ = channels_out;
         long n_ = height_out * width_out;
         long k_ = 1;
-        cout << "forward kernel baah" << endl;
         THFloatBlas_gemm('t', 'n', n_, m_, k_, 1.0f,
                          ones.contiguous().data<scalar_t>(), k_,
                          bias.contiguous().data<scalar_t>(), k_, 0.0f,
