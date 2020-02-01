@@ -92,9 +92,8 @@ template <typename T>
     T roi_end_h = static_cast<T>(round(offset_bottom_rois[4]) + 1.) * spatial_scale - 0.5;
 
     // Force too small ROIs to be 1x1
-    T eps = 0.1;
-    T roi_width = max(roi_end_w - roi_start_w, eps); //avoid 0
-    T roi_height = max(roi_end_h - roi_start_h, eps);
+    T roi_width = max(roi_end_w - roi_start_w, T(0.1)); //avoid 0
+    T roi_height = max(roi_end_h - roi_start_h, T(0.1));
 
     // Compute w and h at bottom
     T bin_size_h = roi_height / static_cast<T>(pooled_height);
@@ -133,9 +132,8 @@ template <typename T>
         {
           continue;
         }
-        T eps1 = 0., eps2 = 1.;
-        w = min(max(w, eps1), width - eps2);
-        h = min(max(h, eps1), height - eps2);
+        w = min(max(w, T(0.)), width - T(1.));
+        h = min(max(h, T(0.)), height - T(1.));
         int c = (ctop * group_size + gh) * group_size + gw;
         T val = bilinear_interp(offset_bottom_data + c * height * width, w, h, width, height);
         sum += val;
@@ -187,9 +185,8 @@ void DeformablePSROIPoolBackwardAccKernel(
     T roi_end_h = static_cast<T>(round(offset_bottom_rois[4]) + 1.) * spatial_scale - 0.5;
     
     // Force too small ROIs to be 1x1
-    T eps3 = 0.1;
-    T roi_width = max(roi_end_w - roi_start_w, eps3); //avoid 0
-    T roi_height = max(roi_end_h - roi_start_h, eps3);
+    T roi_width = max(roi_end_w - roi_start_w, T(0.1)); //avoid 0
+    T roi_height = max(roi_end_h - roi_start_h, T(0.1));
 
     // Compute w and h at bottom
     T bin_size_h = roi_height / static_cast<T>(pooled_height);
@@ -232,9 +229,8 @@ void DeformablePSROIPoolBackwardAccKernel(
         {
           continue;
         }
-        T eps4 = 0., eps5 = 1.;
-        w = min(max(w, eps4), width - eps5);
-        h = min(max(h, eps4), height - eps5);
+        w = min(max(w, T(0.)), width - T(1.));
+        h = min(max(h, T(0.)), height - T(1.));
         int c = (ctop * group_size + gh) * group_size + gw;
         // backward on feature
         int x0 = floor(w);
