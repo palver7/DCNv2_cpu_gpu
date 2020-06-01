@@ -247,15 +247,10 @@ void DeformablePSROIPoolBackwardAccKernel(
         atomicAdd(offset_bottom_data_diff + bottom_index_base + y1 * width + x0, q01 * diff_val);
         atomicAdd(offset_bottom_data_diff + bottom_index_base + y0 * width + x1, q10 * diff_val);
         atomicAdd(offset_bottom_data_diff + bottom_index_base + y1 * width + x1, q11 * diff_val);*/
-
-        T *addr = offset_bottom_data_diff + bottom_index_base + y0 * width + x0;
-        *addr += q00 * diff_val;
-        addr = offset_bottom_data_diff + bottom_index_base + y1 * width + x0;
-        *addr += q01 * diff_val;
-        addr = offset_bottom_data_diff + bottom_index_base + y0 * width + x1;
-        *addr += q10 * diff_val;
-        addr = offset_bottom_data_diff + bottom_index_base + y1 * width + x1;
-        *addr += q11 * diff_val;
+       *(offset_bottom_data_diff + bottom_index_base + y0 * width + x0) += q00 * diff_val;
+       *(offset_bottom_data_diff + bottom_index_base + y1 * width + x0) += q01 * diff_val;
+       *(offset_bottom_data_diff + bottom_index_base + y0 * width + x1) += q10 * diff_val;
+       *(offset_bottom_data_diff + bottom_index_base + y1 * width + x1) += q11 * diff_val;
 
 
         if (no_trans)
@@ -273,10 +268,8 @@ void DeformablePSROIPoolBackwardAccKernel(
 
         /*atomicAdd(bottom_trans_diff + (((n * num_classes + class_id) * 2) * part_size + part_h) * part_size + part_w, diff_x);
         atomicAdd(bottom_trans_diff + (((n * num_classes + class_id) * 2 + 1) * part_size + part_h) * part_size + part_w, diff_y);*/
-        addr = bottom_trans_diff +  (((n * num_classes + class_id) * 2) * part_size + part_h) * part_size + part_w;
-        *addr += diff_x;
-        addr = bottom_trans_diff + (((n * num_classes + class_id) * 2 + 1) * part_size + part_h) * part_size + part_w;
-        *addr += diff_y;
+        *(bottom_trans_diff + (((n * num_classes + class_id) * 2) * part_size + part_h) * part_size + part_w) += diff_x;
+        *(bottom_trans_diff + (((n * num_classes + class_id) * 2 + 1) * part_size + part_h) * part_size + part_w) += diff_y;
       }
     }
   }

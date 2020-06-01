@@ -246,8 +246,8 @@ void modulated_deformable_col2im_cpu_kernel(const int n, const float *data_col, 
           int cur_bottom_grad_pos = ((b * channels + c) * height + cur_h + dy) * width + cur_w + dx;
           float weight = dmcn_get_gradient_weight(cur_inv_h_data, cur_inv_w_data, cur_h + dy, cur_w + dx, height, width);
           //atomicAdd(grad_im + cur_bottom_grad_pos, weight * cur_top_grad);
-          float *addr = grad_im + cur_bottom_grad_pos;
-          *addr += weight * cur_top_grad;
+          *(grad_im + cur_bottom_grad_pos) += weight * cur_top_grad;
+
         }
       }
     }
