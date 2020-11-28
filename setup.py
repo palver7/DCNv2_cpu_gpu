@@ -5,15 +5,15 @@ import glob
 
 import torch
 
-#from torch.utils.cpp_extension import CUDA_HOME
+from torch.utils.cpp_extension import CUDA_HOME
 from torch.utils.cpp_extension import CppExtension
-#from torch.utils.cpp_extension import CUDAExtension
+from torch.utils.cpp_extension import CUDAExtension
 
 from setuptools import find_packages
 from setuptools import setup
 
 requirements = ["torch", "torchvision"]
-os.environ["CC"] = "g++"
+
 
 def get_extensions():
     this_dir = os.path.dirname(os.path.abspath(__file__))
@@ -21,14 +21,15 @@ def get_extensions():
 
     main_file = glob.glob(os.path.join(extensions_dir, "*.cpp"))
     source_cpu = glob.glob(os.path.join(extensions_dir, "cpu", "*.cpp"))
-    #source_cuda = glob.glob(os.path.join(extensions_dir, "cuda", "*.cu"))
-
+    source_cuda = glob.glob(os.path.join(extensions_dir, "cuda", "*.cu"))
+    
+    os.environ["CC"] = "g++"
     sources = main_file + source_cpu
     extension = CppExtension
     extra_compile_args = {"cxx": []}
     define_macros = []
 
-    """
+    
     if torch.cuda.is_available() and CUDA_HOME is not None:
         extension = CUDAExtension
         sources += source_cuda
@@ -40,8 +41,9 @@ def get_extensions():
             "-D__CUDA_NO_HALF2_OPERATORS__",
         ]
     else:
-        raise NotImplementedError('Cuda is not available')
-    """
+        #raise NotImplementedError('Cuda is not available')
+        pass
+    
 
     sources = [os.path.join(extensions_dir, s) for s in sources]
     include_dirs = [extensions_dir]

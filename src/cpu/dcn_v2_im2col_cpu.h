@@ -60,6 +60,7 @@
  */
 
 /***************** Adapted by Charles Shang *********************/
+// modified from the CUDA version for CPU use by Daniel K. Suhendro
 
 #ifndef DCN_V2_IM2COL_CPU
 #define DCN_V2_IM2COL_CPU

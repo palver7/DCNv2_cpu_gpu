@@ -12,6 +12,7 @@
 
 // author: Charles Shang
 // https://github.com/torch/cunn/blob/master/lib/THCUNN/generic/SpatialConvolutionMM.cu
+// modified from the CUDA version for CPU use by Daniel K. Suhendro
 
 at::Tensor
 dcn_v2_cpu_forward(const at::Tensor &input,

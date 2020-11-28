@@ -1,10 +1,28 @@
-## Deformable Convolutional Networks V2 For CPU and GPU with PyTorch 1.0
+## Deformable Convolutional Networks V2 with Pytorch 1.X
 
 ### Build
 ```bash
     ./make.sh         # build
-    python testcpu.py     # run examples and gradient check on CPU
-    python testcuda.py    # run examples and gradient check on CUDA GPU
+    python testcpu.py    # run examples and gradient check on cpu
+    python testcuda.py   # run examples and gradient check on gpu 
 ```
 ### Note
-This repository is based on https://github.com/CharlesShang/DCNv2. I noticed that DCNv2 may have problems with PyTorch 1.4 so I uploaded a previous version of DCNv2 for CPU and GPU that works with PyTorch 1.0. If you are interested in using this repository, please ensure you have the correct version of PyTorch and TorchVision.
+Now the master branch is for pytorch 1.x, you can switch back to pytorch 0.4 with,
+```bash
+git checkout pytorch_0.4
+```
+
+### Known Issues:
+
+- [x] Gradient check w.r.t offset (solved)
+- [ ] Backward is not reentrant (minor)
+
+This is an adaption of the official [Deformable-ConvNets](https://github.com/msracver/Deformable-ConvNets/tree/master/DCNv2_op).
+
+Update: all gradient check passes with **double** precision. 
+
+Another issue is that it raises `RuntimeError: Backward is not reentrant`. However, the error is very small (`<1e-7` for 
+float `<1e-15` for double), 
+so it may not be a serious problem (?)
+
+Please post an issue or PR if you have any comments.
